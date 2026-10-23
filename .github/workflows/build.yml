@@ -664,7 +664,7 @@ jobs:
           else
             echo "KSU_LATEST_COMMIT_DATE=未知" >> $GITHUB_ENV
           fi
-           - name: 解除 BakaSU 的 SUSFS 构建封禁
+      - name: 解除 BakaSU 的 SUSFS 构建封禁
         if: inputs.ksu_variant == 'BakaSU' && inputs.enable_susfs && inputs.ksu_mode != '禁用KSU'
         working-directory: ${{ env.KERNEL_ROOT }}
         run: |
