@@ -664,7 +664,25 @@ jobs:
           else
             echo "KSU_LATEST_COMMIT_DATE=未知" >> $GITHUB_ENV
           fi
-
+           - name: 解除 BakaSU 的 SUSFS 构建封禁
+        if: inputs.ksu_variant == 'BakaSU' && inputs.enable_susfs && inputs.ksu_mode != '禁用KSU'
+        working-directory: ${{ env.KERNEL_ROOT }}
+        run: |
+          MK="KernelSU/kernel/tools/susfs_compat.mk"
+          if [ ! -f "$MK" ]; then
+            echo "::error title=路径不对::找不到 $MK"
+            exit 1
+          fi
+          cp "$MK" /tmp/susfs_compat.mk.orig
+          echo "=== 封禁前 ==="; cat "$MK"
+          sed -i -e '/susfs has NOT update with latest KernelSU source/d' \
+                 -e '/Please wait simonpunk update/d' \
+                 -e '/error Please wait susfs update/d' "$MK"
+          echo "=== 解封后 ==="; cat "$MK"
+          if grep -q 'error Please wait susfs update' "$MK"; then
+            echo "::error title=解封失败::标记还在，上游可能改了文案"
+            exit 1
+          fi
       - name: 配置 SukiSU 管理器信息
         if: (inputs.ksu_variant == 'SukiSU' || inputs.ksu_variant == 'SukiSU(40726)' || inputs.ksu_variant == 'SukiSU(40548)') && inputs.ksu_mode != '禁用KSU'
         working-directory: ${{ env.KERNEL_ROOT }}/KernelSU
