@@ -1433,6 +1433,13 @@ jobs:
       - name: 配置内核选项
         working-directory: ${{ env.KERNEL_ROOT }}
         run: |
+          # 关闭 LTO：与作者检查期望的 LTO_NONE 对齐，也避免 runner 上 LTO 链接 OOM
+          sed -i -e 's/^CONFIG_LTO_CLANG_THIN=y$/# CONFIG_LTO_CLANG_THIN is not set/' \
+                 -e 's/^CONFIG_LTO_CLANG_FULL=y$/# CONFIG_LTO_CLANG_FULL is not set/' \
+                 -e 's/^# CONFIG_LTO_NONE is not set$/CONFIG_LTO_NONE=y/' "$DEFCONFIG"
+          grep -q '^CONFIG_LTO_NONE=y' "$DEFCONFIG" || echo 'CONFIG_LTO_NONE=y' >> "$DEFCONFIG"
+          echo "=== LTO 配置 ==="; grep -E '^CONFIG_LTO|^# CONFIG_LTO' "$DEFCONFIG"
+
           cat >> "$DEFCONFIG" << 'EOF'
           CONFIG_TMPFS_XATTR=y
           CONFIG_TMPFS_POSIX_ACL=y
