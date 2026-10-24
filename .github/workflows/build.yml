@@ -858,6 +858,15 @@ jobs:
           grep -q KSU_NO_PREINIT fs/Makefile || echo 'ccflags-y += -DKSU_NO_PREINIT' >> fs/Makefile
           tail -3 fs/Makefile
           grep -n 'KSU_NO_PREINIT' fs/Makefile
+          SH="../KernelSU/kernel/feature/selinux_hide.c"
+          grep -q 'struct selinux_state fake_state;' "$SH" || \
+            sed -i '/^__maybe_static bool ksu_selinux_hide_running/a struct selinux_state fake_state;' "$SH"
+          grep -q 'fake_state = selinux_state;' "$SH" || \
+            sed -i 's|^            ret = ksu_selinux_hide_enable();|            fake_state = selinux_state;\n            ret = ksu_selinux_hide_enable();|' "$SH"
+          grep -q 'fake_state.policy' "$SH" || \
+            sed -i 's|^                ksu_selinux_hide_running = true;|                ksu_selinux_hide_running = true;\n                fake_state.policy = (struct selinux_policy *)backup_sepolicy;|' "$SH"
+          echo "=== fake_state 补丁结果 ==="
+          grep -n 'fake_state' "$SH"
       - name: 生成 SUSFS 集成补丁
         if: env.SUSFS_PATCH_EXPORT == 'true'
         working-directory: ${{ env.KERNEL_ROOT }}/common
