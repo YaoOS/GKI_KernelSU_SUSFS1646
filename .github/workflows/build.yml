@@ -844,7 +844,13 @@ jobs:
           OS_PATCH_LEVEL: ${{ inputs.os_patch_level }}
           SUB_LEVEL: ${{ inputs.sub_level }}
         run: bash "$GITHUB_WORKSPACE/scripts/susfs_fixes/apply.sh"
-
+      - name: 对齐 BakaSU 与 SUSFS 的 preinit 接口
+        if: inputs.enable_susfs && inputs.ksu_variant == 'BakaSU'
+        working-directory: ${{ env.KERNEL_ROOT }}/common
+        run: |
+          grep -q KSU_NO_PREINIT fs/Makefile || echo 'ccflags-y += -DKSU_NO_PREINIT' >> fs/Makefile
+          tail -3 fs/Makefile
+          grep -n 'KSU_NO_PREINIT' fs/Makefile
       - name: 生成 SUSFS 集成补丁
         if: env.SUSFS_PATCH_EXPORT == 'true'
         working-directory: ${{ env.KERNEL_ROOT }}/common
