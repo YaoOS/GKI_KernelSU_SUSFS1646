@@ -811,7 +811,14 @@ jobs:
               fi
             fi
           fi
-
+          # BakaSU 内置 SUSFS 支持基于旧接口契约；e24d172 起补丁 extern 引用
+          # my_setprocattr/my_write_context/my_write_access，与 manual-hook 模式的
+          # KSU_COMPAT_HAS_SUSFS_FEATURE_SELINUX_HIDE 裁剪冲突 → 链接失败。
+          # 钉到 31eb14a（v2.3.0，my_* 引用为 0）。
+          if [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
+            git -C susfs4ksu checkout 31eb14add587b0a089dfe1819f92cc94920e141e
+            git -C susfs4ksu log -1 --format='BakaSU SUSFS 固定: %h %cd %s' --date=iso
+          fi
           echo "SUSFS 实际提交: $(git -C susfs4ksu rev-parse HEAD)"
           SUSFS_LATEST_COMMIT_DATE=$(git -C susfs4ksu log -1 --date=format:'%Y-%m-%d %H:%M:%S %z' --format='%cd')
           echo "SUSFS_LATEST_COMMIT_DATE=$SUSFS_LATEST_COMMIT_DATE" >> "$GITHUB_ENV"
